@@ -76,8 +76,15 @@
   <!-- Tab 3: Charts -->
   <div id="tab-charts" class="tab-content">
     <div class="card">
-      <div class="card-header green">📈 所有产品利润率对比</div>
-      <div class="card-body"><canvas id="bar-chart"></canvas></div>
+      <div class="card-header green">📈 所有产品利润率对比（由高到低）</div>
+      <div class="card-body"><canvas id="bar-chart" style="max-height:320px"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-header blue">📐 所有产品成本结构占比（%）</div>
+      <div class="card-body" style="font-size:.8rem;color:#666;padding-bottom:4px">
+        每条柱子 = 100% 售价。各色块为各成本类别占售价比例，顶部青色 = 净利润。
+      </div>
+      <div class="card-body"><canvas id="all-pct-chart" style="max-height:360px"></canvas></div>
     </div>
   </div>
 
