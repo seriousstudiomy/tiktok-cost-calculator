@@ -18,24 +18,26 @@ function displayName(p) {
   return [p.productName, p.variation].filter(Boolean).join(" · ");
 }
 
+function n(v) { const x = Number(v); return isFinite(x) ? x : 0; }  // safe number
+
 function calcCost(p, priceOverride, fruitOverride) {
-  const price      = priceOverride  ?? p.price;
-  const fruitPerKg = fruitOverride  ?? p.fruitPerKg;
-  const fruit      = p.weight * fruitPerKg;
-  const labor      = p.output > 0 ? (p.staff * p.wage) / p.output : 0;
-  const carton     = p.carton;
-  const consumables= p.consumables;
-  const tiktok     = price * p.tiktokFee;
-  const influencer = price * p.influencer;
-  const ad         = price * p.adFee;
-  const returnCost = price * p.returnRate;
+  const price      = n(priceOverride  ?? p.price);
+  const fruitPerKg = n(fruitOverride  ?? p.fruitPerKg);
+  const fruit      = n(p.weight) * fruitPerKg;
+  const labor      = n(p.output) > 0 ? (n(p.staff) * n(p.wage)) / n(p.output) : 0;
+  const carton     = n(p.carton);
+  const consumables= n(p.consumables);
+  const tiktok     = price * n(p.tiktokFee);
+  const influencer = price * n(p.influencer);
+  const ad         = price * n(p.adFee);
+  const returnCost = price * n(p.returnRate);
   const total      = fruit + labor + carton + consumables + tiktok + influencer + ad + returnCost;
   const profit     = price - total;
   const margin     = price > 0 ? profit / price : 0;
 
   // Break-even: fixed costs / (1 - sum of % fees)  [only for base call]
   const fixedCosts = fruit + labor + carton + consumables;
-  const pctFees    = p.tiktokFee + p.influencer + p.adFee + p.returnRate;
+  const pctFees    = n(p.tiktokFee) + n(p.influencer) + n(p.adFee) + n(p.returnRate);
   const breakEven  = pctFees < 1 ? fixedCosts / (1 - pctFees) : null;
   const priceRoom  = breakEven !== null ? p.price - breakEven : null;
 
@@ -535,29 +537,69 @@ function showDetail(sku) {
   renderComparison();
 }
 
-// ── Bar Chart (all products overview) ────────────────────────
+// ── Charts Tab (all products) ────────────────────────────────
 function renderBarChart() {
-  const ctx = document.getElementById("bar-chart").getContext("2d");
+  // Chart 1: Profit margin bar (sorted)
+  const ctx1 = document.getElementById("bar-chart").getContext("2d");
   if (window._barChart) window._barChart.destroy();
 
   const sorted = [...allProducts]
-    .map(p => ({ label: displayName(p), margin: calcCost(p).margin }))
-    .sort((a,b) => b.margin - a.margin);
+    .map(p => ({ label: displayName(p), price: n(p.price), c: calcCost(p) }))
+    .sort((a,b) => b.c.margin - a.c.margin);
 
-  window._barChart = new Chart(ctx, {
+  window._barChart = new Chart(ctx1, {
     type: "bar",
     data: {
-      labels: sorted.map(p => p.label),
+      labels: sorted.map(x => x.label),
       datasets: [{
         label: "净利润率",
-        data: sorted.map(p => +(p.margin*100).toFixed(2)),
-        backgroundColor: sorted.map(p => p.margin>=0.1?"#4CAF50":p.margin>=0?"#FFC107":"#F44336")
+        data: sorted.map(x => +(x.c.margin*100).toFixed(2)),
+        backgroundColor: sorted.map(x => x.c.margin>=0.1?"#4CAF50":x.c.margin>=0?"#FFC107":"#F44336")
       }]
     },
     options: {
       responsive: true,
-      plugins: { legend:{display:false}, title:{display:true,text:"所有产品利润率对比"} },
+      plugins: { legend:{display:false}, title:{display:true,text:"所有产品利润率对比（由高到低）"} },
       scales:  { y: { ticks:{ callback: v=>v+"%" } } }
+    }
+  });
+
+  // Chart 2: Stacked cost structure % for all products
+  const ctx2 = document.getElementById("all-pct-chart").getContext("2d");
+  if (window._allPctChart) window._allPctChart.destroy();
+
+  const costKeys = ["fruit","labor","carton","consumables","tiktok","influencer","ad","returnCost"];
+  const allLabels = sorted.map(x => x.label);
+
+  const pctDatasets = costKeys.map((key, ki) => ({
+    label: COST_LABELS[ki],
+    data: sorted.map(x => x.price > 0 ? +(x.c[key] / x.price * 100).toFixed(2) : 0),
+    backgroundColor: CHART_COLORS[ki] + "CC",
+    borderColor: CHART_COLORS[ki],
+    borderWidth: 1,
+  }));
+  pctDatasets.push({
+    label: "净利润 ▲",
+    data: sorted.map(x => +Math.max(0, x.c.margin * 100).toFixed(2)),
+    backgroundColor: "#80CBC480",
+    borderColor: "#009688",
+    borderWidth: 1,
+  });
+
+  window._allPctChart = new Chart(ctx2, {
+    type: "bar",
+    data: { labels: allLabels, datasets: pctDatasets },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: "right" },
+        title:  { display: true, text: "所有产品成本结构（占售价%）" },
+        tooltip: { callbacks: { label: c => c.dataset.label + ": " + c.parsed.y + "%" } }
+      },
+      scales: {
+        x: { stacked: true },
+        y: { stacked: true, max: 100, ticks: { callback: v => v+"%" } }
+      }
     }
   });
 }
