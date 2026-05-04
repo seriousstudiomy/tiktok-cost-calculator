@@ -119,6 +119,8 @@ main { max-width: 1100px; margin: 24px auto; padding: 0 16px; }
 .note { color: #888; font-size: .82rem; }
 .pct { color: #888; }
 .product-name { font-weight: 600; }
+.sku-cell { font-family: monospace; font-size: .85rem; color: #666; }
+input[readonly] { background: #f5f5f5; color: #888; cursor: not-allowed; }
 .empty-msg { text-align: center; color: #aaa; padding: 30px; }
 
 /* Badges */
