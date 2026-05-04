@@ -8,12 +8,14 @@ const CONFIG = {
   // 4. 复制 URL 填到下面
   API_URL: "https://script.google.com/macros/s/AKfycbz3HRdGD1et-TMWbhDmkV8wl98lOT4wAnQQ_5JvWklHcLeID2Bt0Zji0O9RfPkVVmvNNw/exec",
 
-  COLUMNS: ["name","price","fruitPerKg","weight","staff","wage",
-            "output","carton","consumables","tiktokFee",
-            "influencer","adFee","returnRate"],
+  COLUMNS: ["sellerSku","productName","variation","price","fruitPerKg",
+            "weight","staff","wage","output","carton","consumables",
+            "tiktokFee","influencer","adFee","returnRate"],
 
   LABELS: {
-    name:        "产品名称",
+    sellerSku:   "Seller SKU",
+    productName: "产品名",
+    variation:   "Variation",
     price:       "售价 (RM)",
     fruitPerKg:  "水果单价/kg (RM)",
     weight:      "包装重量 (kg)",
