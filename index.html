@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TikTok 成本计算器</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+</head>
+<body>
+
+<!-- Header -->
+<header>
+  <div class="header-logo">📦</div>
+  <div>
+    <h1>TikTok 成本计算器</h1>
+    <div class="subtitle">产品成本管理 · Google Sheets 同步</div>
+  </div>
+</header>
+
+<!-- Tabs -->
+<nav>
+  <button class="tab-btn active" data-tab="tab-overview" onclick="switchTab('tab-overview')">📊 产品总览</button>
+  <button class="tab-btn"        data-tab="tab-detail"   onclick="switchTab('tab-detail')">🔍 产品详情</button>
+  <button class="tab-btn"        data-tab="tab-charts"   onclick="switchTab('tab-charts')">📈 图表对比</button>
+  <button class="tab-btn"        data-tab="tab-form"     onclick="openAddForm()">➕ 新增产品</button>
+</nav>
+
+<main>
+  <div id="error-msg"></div>
+
+  <!-- ── Tab 1: Overview ── -->
+  <div id="tab-overview" class="tab-content active">
+    <div class="card">
+      <div class="card-header blue">
+        📊 产品成本汇总
+        <button class="btn-add" onclick="openAddForm()">➕ 新增产品</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="overview-table">
+          <thead>
+            <tr>
+              <th>产品名称</th>
+              <th style="text-align:right">售价</th>
+              <th style="text-align:right">总成本</th>
+              <th style="text-align:right">净利润</th>
+              <th style="text-align:right">利润率</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="overview-body">
+            <tr><td colspan="6" class="empty-msg">加载中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Tab 2: Detail ── -->
+  <div id="tab-detail" class="tab-content">
+    <div class="card">
+      <div class="card-header orange">
+        🔍 产品详情：<span id="detail-title">—</span>
+      </div>
+      <div class="card-body">
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="label">售价</div>
+            <div class="big-num" id="detail-price">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">总成本</div>
+            <div class="big-num" id="detail-cost">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">净利润</div>
+            <div class="big-num" id="detail-profit">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">净利润率</div>
+            <div class="big-num" id="detail-margin">—</div>
+          </div>
+        </div>
+
+        <div class="detail-grid">
+          <!-- Breakdown Table -->
+          <div>
+            <div class="card-header blue" style="border-radius:8px 8px 0 0;font-size:.9rem">💰 成本明细</div>
+            <div style="overflow-x:auto">
+              <table class="breakdown-table">
+                <thead>
+                  <tr>
+                    <th>项目</th>
+                    <th style="text-align:right">金额</th>
+                    <th>说明</th>
+                    <th style="text-align:right">占比</th>
+                  </tr>
+                </thead>
+                <tbody id="breakdown-body"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Pie Chart -->
+          <div class="card" style="margin:0">
+            <div class="chart-wrap">
+              <canvas id="pie-chart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p style="color:#aaa;font-size:.83rem;text-align:center;margin-top:-10px">
+      点击总览中"详情"按钮查看各产品
+    </p>
+  </div>
+
+  <!-- ── Tab 3: Charts ── -->
+  <div id="tab-charts" class="tab-content">
+    <div class="card">
+      <div class="card-header green">📈 利润率对比</div>
+      <div class="card-body">
+        <canvas id="bar-chart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Tab 4: Form ── -->
+  <div id="tab-form" class="tab-content">
+    <div class="card">
+      <div class="card-header orange" id="form-title">新增产品</div>
+      <div class="card-body">
+        <form id="product-form">
+
+          <!-- Section: 基本信息 -->
+          <div style="font-weight:700;color:#e65100;margin-bottom:12px;font-size:.95rem">📋 基本信息</div>
+          <div class="form-grid" style="margin-bottom:24px">
+            <div class="form-group form-row-full">
+              <label for="f-name">产品名称 *</label>
+              <input id="f-name" type="text" placeholder="例：PAPAYA 1.4~1.6" required>
+            </div>
+            <div class="form-group">
+              <label for="f-price">售价 (RM) *</label>
+              <input id="f-price" type="number" step="0.01" min="0" placeholder="8.60" required>
+            </div>
+            <div class="form-group">
+              <label for="f-fruitPerKg">水果单价/kg (RM)</label>
+              <input id="f-fruitPerKg" type="number" step="0.01" min="0" placeholder="3.20">
+            </div>
+            <div class="form-group">
+              <label for="f-weight">包装重量 (kg)</label>
+              <input id="f-weight" type="number" step="0.01" min="0" placeholder="1.60">
+            </div>
+          </div>
+
+          <!-- Section: 生产成本 -->
+          <div style="font-weight:700;color:#1565c0;margin-bottom:12px;font-size:.95rem">🏭 生产成本</div>
+          <div class="form-grid" style="margin-bottom:24px">
+            <div class="form-group">
+              <label for="f-staff">产线人数</label>
+              <input id="f-staff" type="number" step="1" min="0" placeholder="5">
+            </div>
+            <div class="form-group">
+              <label for="f-wage">时薪 (RM/hr)</label>
+              <input id="f-wage" type="number" step="0.50" min="0" placeholder="10">
+            </div>
+            <div class="form-group">
+              <label for="f-output">每小时产量 (件)</label>
+              <input id="f-output" type="number" step="1" min="1" placeholder="150">
+            </div>
+            <div class="form-group">
+              <label for="f-carton">纸箱成本 (RM)</label>
+              <input id="f-carton" type="number" step="0.01" min="0" placeholder="0.47">
+            </div>
+            <div class="form-group">
+              <label for="f-consumables">耗材成本 (RM)</label>
+              <input id="f-consumables" type="number" step="0.01" min="0" placeholder="0.30">
+            </div>
+          </div>
+
+          <!-- Section: TikTok费率 -->
+          <div style="font-weight:700;color:#2e7d32;margin-bottom:12px;font-size:.95rem">📱 TikTok 费率</div>
+          <div class="form-grid" style="margin-bottom:24px">
+            <div class="form-group">
+              <label for="f-tiktokFee">TikTok手续费 %</label>
+              <input id="f-tiktokFee" type="number" step="0.1" min="0" max="100" placeholder="4">
+              <span class="hint">输入百分比数值，如 4 表示 4%</span>
+            </div>
+            <div class="form-group">
+              <label for="f-influencer">网红佣金 %</label>
+              <input id="f-influencer" type="number" step="0.1" min="0" max="100" placeholder="21">
+            </div>
+            <div class="form-group">
+              <label for="f-adFee">广告费 %</label>
+              <input id="f-adFee" type="number" step="0.1" min="0" max="100" placeholder="0">
+            </div>
+            <div class="form-group">
+              <label for="f-returnRate">退货率 %</label>
+              <input id="f-returnRate" type="number" step="0.1" min="0" max="100" placeholder="10">
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn-cancel" onclick="switchTab('tab-overview')">取消</button>
+            <button type="submit" class="btn-submit">💾 保存到 Google Sheets</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Loading Overlay -->
+<div id="loading">
+  <div class="spinner"></div>
+  正在同步...
+</div>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
