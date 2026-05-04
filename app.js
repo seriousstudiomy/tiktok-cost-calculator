@@ -186,7 +186,7 @@ function renderComparison() {
   container.innerHTML = "";
 
   // ── Summary comparison table ──
-  const costs = products.map(calcCost);
+  const costs = products.map(p => calcCost(p));
 
   const rows = [
     ["售价 (RM)",       p => Number(p.price).toFixed(2), false],
@@ -235,7 +235,7 @@ function renderComparison() {
     const maxIdx = validVals.length ? vals.indexOf(Math.max(...validVals)) : -1;
     const minIdx = validVals.length ? vals.indexOf(Math.min(...validVals)) : -1;
 
-    const needsRM = label.includes("(RM)") || label.includes("利润");
+    const needsRM = label.includes("(RM)") || label.endsWith("利润");
     const needsPct= label.includes("占售价");
 
     tableHTML += `<tr>
