@@ -257,6 +257,70 @@ input[readonly] { background: #f5f5f5; color: #888; cursor: not-allowed; }
   font-size: .92rem;
 }
 
-/* Charts page */
-.charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-@media (max-width: 700px) { .charts-grid { grid-template-columns: 1fr; } }
+/* Compare bar */
+#compare-bar {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  background: var(--blue-l);
+  border-bottom: 2px solid #90CAF9;
+  padding: 8px 24px;
+  flex-wrap: wrap;
+}
+#compare-chips { display:flex; gap:8px; flex-wrap:wrap; flex:1; }
+.cmp-chip {
+  display: inline-flex; align-items: center; gap:5px;
+  background: #fff; border: 1.5px solid var(--blue);
+  border-radius: 20px; padding: 3px 10px 3px 12px;
+  font-size: .85rem; font-weight: 600; color: var(--blue);
+}
+.cmp-chip button {
+  background: none; border: none; cursor: pointer;
+  color: #aaa; font-size: .9rem; padding: 0 2px; line-height:1;
+}
+.cmp-chip button:hover { color: var(--red); }
+.btn-cmp {
+  border: 1.5px solid var(--blue); border-radius: 6px;
+  background: #fff; color: var(--blue);
+  padding: 4px 10px; font-size: .8rem; font-weight: 600; cursor: pointer;
+  white-space: nowrap; transition: all .15s;
+}
+.btn-cmp:hover   { background: var(--blue); color: #fff; }
+.btn-cmp-on {
+  border: 1.5px solid var(--blue); border-radius: 6px;
+  background: var(--blue); color: #fff;
+  padding: 4px 10px; font-size: .8rem; font-weight: 600; cursor: pointer;
+  white-space: nowrap;
+}
+.btn-cmp-clear {
+  background: none; border: 1px solid #aaa; border-radius: 6px;
+  color: #888; padding: 5px 12px; font-size: .82rem; cursor: pointer;
+  white-space: nowrap;
+}
+.btn-cmp-clear:hover { border-color: var(--red); color: var(--red); }
+.btn-cmp-go {
+  background: var(--blue); color: #fff; border: none;
+  border-radius: 6px; padding: 6px 14px; font-size: .85rem;
+  font-weight: 700; cursor: pointer; white-space: nowrap;
+}
+.btn-cmp-go:hover { opacity: .85; }
+.row-in-compare td { background: #E3F2FD !important; }
+
+/* Comparison table */
+.cmp-table { width:100%; border-collapse:collapse; font-size:.88rem; }
+.cmp-table th {
+  background: var(--blue); color:#fff;
+  padding: 10px 12px; text-align:left;
+}
+.cmp-th-name { font-size:.9rem; font-weight:700; }
+.cmp-th-sku  { font-size:.75rem; opacity:.75; font-family:monospace; }
+.cmp-table td { padding:8px 12px; border-bottom:1px solid #eee; }
+.cmp-table tr:nth-child(even) td { background: #f9f9f9; }
+.cmp-label { font-weight:500; color:#444; }
+.cmp-section-row td {
+  background: var(--blue-l) !important;
+  font-weight: 700; color: var(--blue);
+  font-size: .82rem; padding: 5px 12px;
+}
+.cmp-best  { color: var(--green); font-weight:700; }
+.cmp-worst { color: var(--red);   font-weight:700; }
