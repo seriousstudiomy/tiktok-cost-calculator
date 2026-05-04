@@ -9,7 +9,6 @@
 </head>
 <body>
 
-<!-- Header -->
 <header>
   <div class="header-logo">📦</div>
   <div>
@@ -18,18 +17,25 @@
   </div>
 </header>
 
-<!-- Tabs -->
 <nav>
   <button class="tab-btn active" data-tab="tab-overview" onclick="switchTab('tab-overview')">📊 产品总览</button>
-  <button class="tab-btn"        data-tab="tab-detail"   onclick="switchTab('tab-detail')">🔍 产品详情</button>
-  <button class="tab-btn"        data-tab="tab-charts"   onclick="switchTab('tab-charts')">📈 图表对比</button>
-  <button class="tab-btn"        data-tab="tab-form"     onclick="openAddForm()">➕ 新增产品</button>
+  <button class="tab-btn" id="nav-detail-btn" data-tab="tab-detail" onclick="switchTab('tab-detail')">🔍 产品详情</button>
+  <button class="tab-btn" data-tab="tab-charts" onclick="switchTab('tab-charts')">📈 图表对比</button>
+  <button class="tab-btn" data-tab="tab-form" onclick="openAddForm()">➕ 新增产品</button>
 </nav>
+
+<!-- Compare bar -->
+<div id="compare-bar">
+  <span style="font-weight:700;color:#1565c0;white-space:nowrap">🔍 对比中：</span>
+  <div id="compare-chips"></div>
+  <button class="btn-cmp-clear" onclick="clearCompare()">清空</button>
+  <button class="btn-cmp-go" onclick="switchTab('tab-detail')">查看对比 →</button>
+</div>
 
 <main>
   <div id="error-msg"></div>
 
-  <!-- ── Tab 1: Overview ── -->
+  <!-- Tab 1: Overview -->
   <div id="tab-overview" class="tab-content active">
     <div class="card">
       <div class="card-header blue">
@@ -51,91 +57,37 @@
             </tr>
           </thead>
           <tbody id="overview-body">
-            <tr><td colspan="6" class="empty-msg">加载中...</td></tr>
+            <tr><td colspan="8" class="empty-msg">加载中...</td></tr>
           </tbody>
         </table>
       </div>
     </div>
   </div>
 
-  <!-- ── Tab 2: Detail ── -->
+  <!-- Tab 2: Detail / Compare -->
   <div id="tab-detail" class="tab-content">
-    <div class="card">
-      <div class="card-header orange">
-        🔍 <span id="detail-title">—</span>
-        <span style="font-size:.8rem;opacity:.8;font-weight:400">SKU: <span id="detail-sku">—</span></span>
-      </div>
-      <div class="card-body">
-        <div class="stats-row">
-          <div class="stat-card">
-            <div class="label">售价</div>
-            <div class="big-num" id="detail-price">—</div>
-          </div>
-          <div class="stat-card">
-            <div class="label">总成本</div>
-            <div class="big-num" id="detail-cost">—</div>
-          </div>
-          <div class="stat-card">
-            <div class="label">净利润</div>
-            <div class="big-num" id="detail-profit">—</div>
-          </div>
-          <div class="stat-card">
-            <div class="label">净利润率</div>
-            <div class="big-num" id="detail-margin">—</div>
-          </div>
-        </div>
-
-        <div class="detail-grid">
-          <!-- Breakdown Table -->
-          <div>
-            <div class="card-header blue" style="border-radius:8px 8px 0 0;font-size:.9rem">💰 成本明细</div>
-            <div style="overflow-x:auto">
-              <table class="breakdown-table">
-                <thead>
-                  <tr>
-                    <th>项目</th>
-                    <th style="text-align:right">金额</th>
-                    <th>说明</th>
-                    <th style="text-align:right">占比</th>
-                  </tr>
-                </thead>
-                <tbody id="breakdown-body"></tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- Pie Chart -->
-          <div class="card" style="margin:0">
-            <div class="chart-wrap">
-              <canvas id="pie-chart"></canvas>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div id="detail-container">
+      <p style="color:#aaa;font-size:.9rem;text-align:center;padding:40px">
+        在总览中点击 <strong>＋ 比较</strong> 选择产品，最多 4 个
+      </p>
     </div>
-    <p style="color:#aaa;font-size:.83rem;text-align:center;margin-top:-10px">
-      点击总览中"详情"按钮查看各产品
-    </p>
   </div>
 
-  <!-- ── Tab 3: Charts ── -->
+  <!-- Tab 3: Charts -->
   <div id="tab-charts" class="tab-content">
     <div class="card">
-      <div class="card-header green">📈 利润率对比</div>
-      <div class="card-body">
-        <canvas id="bar-chart"></canvas>
-      </div>
+      <div class="card-header green">📈 所有产品利润率对比</div>
+      <div class="card-body"><canvas id="bar-chart"></canvas></div>
     </div>
   </div>
 
-  <!-- ── Tab 4: Form ── -->
+  <!-- Tab 4: Form -->
   <div id="tab-form" class="tab-content">
     <div class="card">
       <div class="card-header orange" id="form-title">新增产品</div>
       <div class="card-body">
         <form id="product-form">
 
-          <!-- Section: 基本信息 -->
           <div style="font-weight:700;color:#e65100;margin-bottom:12px;font-size:.95rem">📋 基本信息</div>
           <div class="form-grid" style="margin-bottom:24px">
             <div class="form-group">
@@ -165,7 +117,6 @@
             </div>
           </div>
 
-          <!-- Section: 生产成本 -->
           <div style="font-weight:700;color:#1565c0;margin-bottom:12px;font-size:.95rem">🏭 生产成本</div>
           <div class="form-grid" style="margin-bottom:24px">
             <div class="form-group">
@@ -190,7 +141,6 @@
             </div>
           </div>
 
-          <!-- Section: TikTok费率 -->
           <div style="font-weight:700;color:#2e7d32;margin-bottom:12px;font-size:.95rem">📱 TikTok 费率</div>
           <div class="form-grid" style="margin-bottom:24px">
             <div class="form-group">
@@ -222,11 +172,7 @@
   </div>
 </main>
 
-<!-- Loading Overlay -->
-<div id="loading">
-  <div class="spinner"></div>
-  正在同步...
-</div>
+<div id="loading"><div class="spinner"></div>正在同步...</div>
 
 <script src="config.js"></script>
 <script src="app.js"></script>
