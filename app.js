@@ -152,8 +152,6 @@ function clearCompare() {
 
 // ── Comparison View ──────────────────────────────────────────
 function renderComparison() {
-  switchTab("tab-detail");
-
   const products = compareList.map(sku => allProducts.find(p => p.sellerSku === sku)).filter(Boolean);
   if (!products.length) return;
 
