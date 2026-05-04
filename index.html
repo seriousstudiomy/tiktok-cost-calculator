@@ -40,7 +40,9 @@
         <table class="overview-table">
           <thead>
             <tr>
-              <th>产品名称</th>
+              <th>Seller SKU</th>
+              <th>产品名</th>
+              <th>Variation</th>
               <th style="text-align:right">售价</th>
               <th style="text-align:right">总成本</th>
               <th style="text-align:right">净利润</th>
@@ -60,7 +62,8 @@
   <div id="tab-detail" class="tab-content">
     <div class="card">
       <div class="card-header orange">
-        🔍 产品详情：<span id="detail-title">—</span>
+        🔍 <span id="detail-title">—</span>
+        <span style="font-size:.8rem;opacity:.8;font-weight:400">SKU: <span id="detail-sku">—</span></span>
       </div>
       <div class="card-body">
         <div class="stats-row">
@@ -135,9 +138,18 @@
           <!-- Section: 基本信息 -->
           <div style="font-weight:700;color:#e65100;margin-bottom:12px;font-size:.95rem">📋 基本信息</div>
           <div class="form-grid" style="margin-bottom:24px">
-            <div class="form-group form-row-full">
-              <label for="f-name">产品名称 *</label>
-              <input id="f-name" type="text" placeholder="例：PAPAYA 1.4~1.6" required>
+            <div class="form-group">
+              <label for="f-sellerSku">Seller SKU *</label>
+              <input id="f-sellerSku" type="text" placeholder="例：PAP-1.4-1.6" required>
+              <span class="hint">唯一编号，编辑时不可更改</span>
+            </div>
+            <div class="form-group">
+              <label for="f-productName">产品名 *</label>
+              <input id="f-productName" type="text" placeholder="例：Papaya" required>
+            </div>
+            <div class="form-group">
+              <label for="f-variation">Variation</label>
+              <input id="f-variation" type="text" placeholder="例：1.4~1.6kg">
             </div>
             <div class="form-group">
               <label for="f-price">售价 (RM) *</label>
