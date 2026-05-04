@@ -18,19 +18,37 @@ function displayName(p) {
   return [p.productName, p.variation].filter(Boolean).join(" · ");
 }
 
-function calcCost(p) {
-  const fruit      = p.weight * p.fruitPerKg;
+function calcCost(p, priceOverride, fruitOverride) {
+  const price      = priceOverride  ?? p.price;
+  const fruitPerKg = fruitOverride  ?? p.fruitPerKg;
+  const fruit      = p.weight * fruitPerKg;
   const labor      = p.output > 0 ? (p.staff * p.wage) / p.output : 0;
   const carton     = p.carton;
   const consumables= p.consumables;
-  const tiktok     = p.price * p.tiktokFee;
-  const influencer = p.price * p.influencer;
-  const ad         = p.price * p.adFee;
-  const returnCost = p.price * p.returnRate;
+  const tiktok     = price * p.tiktokFee;
+  const influencer = price * p.influencer;
+  const ad         = price * p.adFee;
+  const returnCost = price * p.returnRate;
   const total      = fruit + labor + carton + consumables + tiktok + influencer + ad + returnCost;
-  const profit     = p.price - total;
-  const margin     = p.price > 0 ? profit / p.price : 0;
-  return { fruit, labor, carton, consumables, tiktok, influencer, ad, returnCost, total, profit, margin };
+  const profit     = price - total;
+  const margin     = price > 0 ? profit / price : 0;
+
+  // Break-even: fixed costs / (1 - sum of % fees)  [only for base call]
+  const fixedCosts = fruit + labor + carton + consumables;
+  const pctFees    = p.tiktokFee + p.influencer + p.adFee + p.returnRate;
+  const breakEven  = pctFees < 1 ? fixedCosts / (1 - pctFees) : null;
+  const priceRoom  = breakEven !== null ? p.price - breakEven : null;
+
+  // Sensitivity — only computed on the base call (no overrides) to avoid recursion
+  const isBaseCall = priceOverride == null && fruitOverride == null;
+  const profitIfPriceDrop10 = isBaseCall ? calcCost(p, p.price * 0.9, undefined).profit : null;
+  const profitIfFruitUp10   = isBaseCall ? calcCost(p, undefined, p.fruitPerKg * 1.1).profit : null;
+
+  return {
+    fruit, labor, carton, consumables, tiktok, influencer, ad, returnCost,
+    total, profit, margin, fixedCosts, pctFees, breakEven, priceRoom,
+    profitIfPriceDrop10, profitIfFruitUp10
+  };
 }
 
 function costArray(c) {
@@ -169,19 +187,26 @@ function renderComparison() {
   const costs = products.map(calcCost);
 
   const rows = [
-    ["售价 (RM)",   p => Number(p.price).toFixed(2), false],
-    ["总成本 (RM)", (_, i) => costs[i].total.toFixed(3), false],
-    ["净利润 (RM)", (_, i) => costs[i].profit.toFixed(3), true],
-    ["净利润率",    (_, i) => (costs[i].margin*100).toFixed(1)+"%", true],
+    ["售价 (RM)",       p => Number(p.price).toFixed(2), false],
+    ["总成本 (RM)",     (_, i) => costs[i].total.toFixed(3), false],
+    ["净利润 (RM)",     (_, i) => costs[i].profit.toFixed(3), true],
+    ["净利润率",        (_, i) => (costs[i].margin*100).toFixed(1)+"%", true],
+    ["── 关键决策指标 ──", null, false],
+    ["保本价 (RM)",     (_, i) => costs[i].breakEven != null ? costs[i].breakEven.toFixed(3) : "—", false, "lowest"],
+    ["降价空间 (RM)",   (_, i) => costs[i].priceRoom != null ? costs[i].priceRoom.toFixed(3) : "—", true],
+    ["成本占售价",      (_, i) => costs[i].total > 0 && products[i].price > 0 ? (costs[i].total/products[i].price*100).toFixed(1)+"%" : "—", false, "lowest_num"],
+    ["── 敏感度分析 ──", null, false],
+    ["若售价降10%利润",  (_, i) => costs[i].profitIfPriceDrop10 != null ? costs[i].profitIfPriceDrop10.toFixed(3) : "—", true],
+    ["若水果涨价10%利润",(_, i) => costs[i].profitIfFruitUp10  != null ? costs[i].profitIfFruitUp10.toFixed(3)  : "—", true],
     ["── 成本明细 ──", null, false],
-    ["水果成本",    (_, i) => costs[i].fruit.toFixed(3), false],
-    ["人力成本",    (_, i) => costs[i].labor.toFixed(3), false],
-    ["纸箱成本",    (_, i) => costs[i].carton.toFixed(3), false],
-    ["耗材成本",    (_, i) => costs[i].consumables.toFixed(3), false],
-    ["TikTok手续费",(_, i) => costs[i].tiktok.toFixed(3), false],
-    ["网红佣金",    (_, i) => costs[i].influencer.toFixed(3), false],
-    ["广告费",      (_, i) => costs[i].ad.toFixed(3), false],
-    ["退货成本",    (_, i) => costs[i].returnCost.toFixed(3), false],
+    ["水果成本",        (_, i) => costs[i].fruit.toFixed(3), false],
+    ["人力成本",        (_, i) => costs[i].labor.toFixed(3), false],
+    ["纸箱成本",        (_, i) => costs[i].carton.toFixed(3), false],
+    ["耗材成本",        (_, i) => costs[i].consumables.toFixed(3), false],
+    ["TikTok手续费",    (_, i) => costs[i].tiktok.toFixed(3), false],
+    ["网红佣金",        (_, i) => costs[i].influencer.toFixed(3), false],
+    ["广告费",          (_, i) => costs[i].ad.toFixed(3), false],
+    ["退货成本",        (_, i) => costs[i].returnCost.toFixed(3), false],
   ];
 
   const colWidth = `${Math.floor(70 / products.length)}%`;
@@ -198,27 +223,46 @@ function renderComparison() {
       </tr></thead>
       <tbody>`;
 
-  rows.forEach(([label, fn, highlight]) => {
+  rows.forEach(([label, fn, highlight, mode]) => {
     if (!fn) {
       tableHTML += `<tr class="cmp-section-row"><td colspan="${products.length+1}">${label}</td></tr>`;
       return;
     }
-    // Find best value index for highlighting
     const vals = products.map((p,i) => parseFloat(fn(p,i)));
-    const maxIdx = vals.indexOf(Math.max(...vals));
+    const validVals = vals.filter(v => !isNaN(v));
+    const maxIdx = validVals.length ? vals.indexOf(Math.max(...validVals)) : -1;
+    const minIdx = validVals.length ? vals.indexOf(Math.min(...validVals)) : -1;
+
+    const needsRM = label.includes("(RM)") || label.includes("利润");
+    const needsPct= label.includes("占售价");
 
     tableHTML += `<tr>
       <td class="cmp-label">${label}</td>
       ${products.map((p,i) => {
-        const val = fn(p,i);
-        const numVal = parseFloat(val);
+        const raw    = fn(p,i);
+        const numVal = parseFloat(raw);
         let cls = "";
-        if (highlight) {
-          cls = numVal >= 0 ? (i === maxIdx ? "cmp-best" : "") : "cmp-worst";
-        } else if (label.includes("总成本")) {
-          cls = i === vals.indexOf(Math.min(...vals)) ? "cmp-best" : "";
+        if (!isNaN(numVal)) {
+          if (highlight) {
+            // Higher is better
+            if (numVal >= 0) cls = i === maxIdx ? "cmp-best" : "";
+            else cls = "cmp-worst";
+          } else if (mode === "lowest") {
+            // Lower is better (e.g. break-even price)
+            cls = i === minIdx ? "cmp-best" : "";
+          } else if (mode === "lowest_num") {
+            cls = i === minIdx ? "cmp-best" : "";
+          } else if (label.includes("总成本")) {
+            cls = i === minIdx ? "cmp-best" : "";
+          }
         }
-        return `<td class="num ${cls}">${isNaN(numVal) ? val : (label.includes("RM")||!label.includes("%") ? "RM "+val : val)}</td>`;
+        let display = raw;
+        if (!isNaN(numVal)) {
+          if (needsPct) display = raw;
+          else if (needsRM) display = "RM " + raw;
+          else if (!label.includes("%")) display = raw;
+        }
+        return `<td class="num ${cls}">${display}</td>`;
       }).join("")}
     </tr>`;
   });
@@ -231,11 +275,34 @@ function renderComparison() {
   chartWrap.className = "card";
   chartWrap.style.marginBottom = "20px";
   chartWrap.innerHTML = `
-    <div class="card-header blue">📊 成本结构对比</div>
+    <div class="card-header blue">📊 成本结构对比 (RM 金额)</div>
     <div class="card-body"><canvas id="cmp-chart" style="max-height:340px"></canvas></div>`;
   container.appendChild(chartWrap);
 
+  // ── Stacked % chart ──
+  const pctWrap = document.createElement("div");
+  pctWrap.className = "card";
+  pctWrap.style.marginBottom = "20px";
+  pctWrap.innerHTML = `
+    <div class="card-header green">📐 成本结构占售价比例 (%)</div>
+    <div class="card-body" style="font-size:.8rem;color:#666;margin-bottom:6px">
+      每条柱子 = 100% 售价。各色块 = 各成本占售价的%，柱子剩余部分 = 净利润。
+    </div>
+    <div class="card-body"><canvas id="cmp-pct-chart" style="max-height:340px"></canvas></div>`;
+  container.appendChild(pctWrap);
+
+  // ── Sensitivity card ──
+  const sensWrap = document.createElement("div");
+  sensWrap.className = "card";
+  sensWrap.style.marginBottom = "20px";
+  sensWrap.innerHTML = `
+    <div class="card-header orange">⚠️ 敏感度：若售价降10% 或 水果涨价10%</div>
+    <div class="card-body"><canvas id="cmp-sens-chart" style="max-height:280px"></canvas></div>`;
+  container.appendChild(sensWrap);
+
   renderCompareChart(products, costs);
+  renderComparePctChart(products, costs);
+  renderCompareSensChart(products, costs);
 }
 
 function renderCompareChart(products, costs) {
@@ -261,6 +328,109 @@ function renderCompareChart(products, costs) {
         title:  { display:true, text:"各成本项目对比 (RM)" }
       },
       scales: { y: { ticks: { callback: v => "RM "+v } } }
+    }
+  });
+}
+
+let cmpPctChart  = null;
+let cmpSensChart = null;
+
+function renderComparePctChart(products, costs) {
+  const ctx = document.getElementById("cmp-pct-chart").getContext("2d");
+  if (cmpPctChart) cmpPctChart.destroy();
+
+  // Each dataset = one cost category; value = pct of selling price
+  const labels = products.map(p => displayName(p));
+  const costKeys = ["fruit","labor","carton","consumables","tiktok","influencer","ad","returnCost"];
+
+  const datasets = costKeys.map((key, ki) => ({
+    label: COST_LABELS[ki],
+    data: products.map((p, pi) => {
+      const v = costs[pi][key];
+      return p.price > 0 ? +( v / p.price * 100 ).toFixed(2) : 0;
+    }),
+    backgroundColor: CHART_COLORS[ki % CHART_COLORS.length] + "CC",
+    borderColor:     CHART_COLORS[ki % CHART_COLORS.length],
+    borderWidth: 1,
+  }));
+
+  // Add profit as the top segment
+  datasets.push({
+    label: "净利润",
+    data: products.map((p, pi) => {
+      const m = costs[pi].margin * 100;
+      return +Math.max(0, m).toFixed(2);
+    }),
+    backgroundColor: "#80CBC480",
+    borderColor: "#009688",
+    borderWidth: 1,
+  });
+
+  cmpPctChart = new Chart(ctx, {
+    type: "bar",
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: "right" },
+        title:  { display: true, text: "各产品成本结构（占售价%）" },
+        tooltip: { callbacks: { label: ctx => ctx.dataset.label + ": " + ctx.parsed.y + "%" } }
+      },
+      scales: {
+        x: { stacked: true },
+        y: {
+          stacked: true,
+          max: 100,
+          ticks: { callback: v => v + "%" }
+        }
+      }
+    }
+  });
+}
+
+function renderCompareSensChart(products, costs) {
+  const ctx = document.getElementById("cmp-sens-chart").getContext("2d");
+  if (cmpSensChart) cmpSensChart.destroy();
+
+  const labels = products.map(p => displayName(p));
+
+  cmpSensChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: "当前净利润",
+          data: products.map((p, i) => +costs[i].profit.toFixed(3)),
+          backgroundColor: "#4CAF50CC",
+          borderColor: "#4CAF50",
+          borderWidth: 1,
+        },
+        {
+          label: "售价降10%后",
+          data: products.map((p, i) => +costs[i].profitIfPriceDrop10.toFixed(3)),
+          backgroundColor: "#FF9800CC",
+          borderColor: "#FF9800",
+          borderWidth: 1,
+        },
+        {
+          label: "水果涨价10%后",
+          data: products.map((p, i) => +costs[i].profitIfFruitUp10.toFixed(3)),
+          backgroundColor: "#F44336CC",
+          borderColor: "#F44336",
+          borderWidth: 1,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: "top" },
+        title:  { display: true, text: "敏感度分析：各场景净利润对比 (RM/件)" }
+      },
+      scales: {
+        y: { ticks: { callback: v => "RM " + v } }
+      }
     }
   });
 }
@@ -299,6 +469,16 @@ function showSingleDetail(p) {
             <div class="big-num ${c.profit>=0?'profit-pos':'profit-neg'}">RM ${c.profit.toFixed(3)}</div></div>
           <div class="stat-card"><div class="label">净利润率</div>
             <div class="big-num ${marginCls}">${(c.margin*100).toFixed(1)}%</div></div>
+        </div>
+        <div class="stats-row" style="margin-bottom:20px;grid-template-columns:repeat(3,1fr)">
+          <div class="stat-card"><div class="label">保本价</div>
+            <div class="big-num" style="font-size:1.1rem">${c.breakEven!=null?"RM "+c.breakEven.toFixed(2):"—"}</div></div>
+          <div class="stat-card"><div class="label">降价空间</div>
+            <div class="big-num ${c.priceRoom!=null&&c.priceRoom>0?'profit-pos':'profit-neg'}" style="font-size:1.1rem">
+              ${c.priceRoom!=null?"RM "+c.priceRoom.toFixed(2):"—"}</div></div>
+          <div class="stat-card"><div class="label">售价降10% → 利润</div>
+            <div class="big-num ${c.profitIfPriceDrop10!=null&&c.profitIfPriceDrop10>=0?'profit-pos':'profit-neg'}" style="font-size:1.1rem">
+              ${c.profitIfPriceDrop10!=null?"RM "+c.profitIfPriceDrop10.toFixed(3):"—"}</div></div>
         </div>
         <div class="detail-grid">
           <div>
