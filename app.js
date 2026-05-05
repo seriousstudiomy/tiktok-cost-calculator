@@ -668,13 +668,32 @@ async function confirmDelete(sku) {
 }
 
 // ── UI Helpers ───────────────────────────────────────────────
+let _packlistLoaded = false;
+
 function switchTab(tabId) {
   document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
   document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
   document.getElementById(tabId).classList.add("active");
   document.querySelector(`[data-tab="${tabId}"]`).classList.add("active");
-  if (tabId === "tab-detail") renderComparison();
-  if (tabId === "tab-charts") renderBarChart();
+  if (tabId === "tab-detail")    renderComparison();
+  if (tabId === "tab-charts")    renderBarChart();
+  if (tabId === "tab-packlist" && !_packlistLoaded) {
+    _packlistLoaded = true;
+    const f = document.getElementById("packlist-frame");
+    const url = CONFIG.PACKLIST_URL || "";
+    f.src = url;
+    const link = document.getElementById("packlist-newTab");
+    if (link) link.href = url;
+  }
+}
+
+// ── Pack List ────────────────────────────────────────────────
+function reloadPacklist() {
+  const f = document.getElementById("packlist-frame");
+  // Force reload by appending a timestamp bust
+  const base = (CONFIG.PACKLIST_URL || "").split("?")[0];
+  f.src = base + "?t=" + Date.now();
+  document.getElementById("packlist-newTab").href = CONFIG.PACKLIST_URL || "";
 }
 
 function showLoading(on) {
@@ -691,6 +710,16 @@ document.addEventListener("DOMContentLoaded", () => {
   if (CONFIG.API_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
     showError("请先在 config.js 中填入 Apps Script 部署 URL"); return;
   }
+
+  // Wire up quick-links from config
+  const sheetsEl   = document.getElementById("link-sheets");
+  const packlistEl = document.getElementById("link-packlist");
+  if (sheetsEl   && CONFIG.SHEETS_URL)   sheetsEl.href   = CONFIG.SHEETS_URL;
+  if (packlistEl && CONFIG.PACKLIST_URL) packlistEl.href = CONFIG.PACKLIST_URL;
+  if (sheetsEl   && CONFIG.SHEETS_URL === "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit") {
+    sheetsEl.querySelector(".link-desc").textContent = "⚠️ 请在 config.js 填入 SHEETS_URL";
+  }
+
   document.getElementById("product-form").addEventListener("submit", submitForm);
   loadProducts();
 });
