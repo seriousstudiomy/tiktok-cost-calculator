@@ -8,6 +8,12 @@ const CONFIG = {
   // 4. 复制 URL 填到下面
   API_URL: "https://script.google.com/macros/s/AKfycbz3HRdGD1et-TMWbhDmkV8wl98lOT4wAnQQ_5JvWklHcLeID2Bt0Zji0O9RfPkVVmvNNw/exec",
 
+  // Google Sheets 产品数据表直链（填入你的 Sheets URL）
+  SHEETS_URL: "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit",
+
+  // 打包清单系统
+  PACKLIST_URL: "https://asia-southeast1-suka-packlist.cloudfunctions.net/skb-bot/picklist",
+
   COLUMNS: ["sellerSku","productName","variation","price","fruitPerKg",
             "weight","staff","wage","output","carton","consumables",
             "tiktokFee","influencer","adFee","returnRate"],
