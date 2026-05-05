@@ -257,6 +257,39 @@ input[readonly] { background: #f5f5f5; color: #888; cursor: not-allowed; }
   font-size: .92rem;
 }
 
+/* Quick Links Tab */
+.links-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+@media (max-width: 600px) { .links-grid { grid-template-columns: 1fr; } }
+
+.link-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  border: 1.5px solid #e0e0e0;
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: #333;
+  transition: all .18s;
+  background: #fff;
+}
+.link-card:hover {
+  border-color: var(--blue);
+  background: var(--blue-l);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(21,101,192,.12);
+}
+.link-icon { font-size: 2rem; flex-shrink: 0; }
+.link-info { flex: 1; }
+.link-title { font-weight: 700; font-size: 1rem; margin-bottom: 3px; }
+.link-desc  { font-size: .82rem; color: #777; }
+.link-arrow { font-size: 1.2rem; color: #bbb; transition: color .18s; }
+.link-card:hover .link-arrow { color: var(--blue); }
+
 /* Compare bar */
 #compare-bar {
   display: none;
