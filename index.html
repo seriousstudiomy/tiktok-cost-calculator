@@ -21,6 +21,8 @@
   <button class="tab-btn active" data-tab="tab-overview" onclick="switchTab('tab-overview')">📊 产品总览</button>
   <button class="tab-btn" id="nav-detail-btn" data-tab="tab-detail" onclick="switchTab('tab-detail')">🔍 产品详情</button>
   <button class="tab-btn" data-tab="tab-charts" onclick="switchTab('tab-charts')">📈 图表对比</button>
+  <button class="tab-btn" data-tab="tab-packlist" onclick="switchTab('tab-packlist')">📦 打包清单</button>
+  <button class="tab-btn" data-tab="tab-links" onclick="switchTab('tab-links')">🔗 快速链接</button>
   <button class="tab-btn" data-tab="tab-form" onclick="openAddForm()">➕ 新增产品</button>
 </nav>
 
@@ -88,7 +90,73 @@
     </div>
   </div>
 
-  <!-- Tab 4: Form -->
+  <!-- Tab 4: Pack List -->
+  <div id="tab-packlist" class="tab-content">
+    <div class="card">
+      <div class="card-header green">
+        📦 打包清单
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn-cancel" onclick="reloadPacklist()" style="padding:5px 12px;font-size:.82rem">🔄 刷新</button>
+          <a id="packlist-newTab" href="#" target="_blank" class="btn-detail" style="padding:5px 12px;font-size:.82rem;text-decoration:none">↗ 新标签页</a>
+        </div>
+      </div>
+      <div style="padding:0">
+        <iframe id="packlist-frame" src="about:blank"
+          style="width:100%;min-height:720px;border:none;display:block"
+          title="打包清单"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 5: Quick Links -->
+  <div id="tab-links" class="tab-content">
+    <div class="card">
+      <div class="card-header blue">🔗 快速链接</div>
+      <div class="card-body">
+        <div class="links-grid">
+
+          <a class="link-card" id="link-sheets" href="#" target="_blank">
+            <div class="link-icon">📊</div>
+            <div class="link-info">
+              <div class="link-title">产品数据表</div>
+              <div class="link-desc">Google Sheets — 成本数据后端</div>
+            </div>
+            <div class="link-arrow">↗</div>
+          </a>
+
+          <a class="link-card" id="link-packlist" href="#" target="_blank">
+            <div class="link-icon">📦</div>
+            <div class="link-info">
+              <div class="link-title">打包清单系统</div>
+              <div class="link-desc">今日待发订单 · Pick &amp; Pack List</div>
+            </div>
+            <div class="link-arrow">↗</div>
+          </a>
+
+          <a class="link-card" href="https://seller-my.tiktok.com/" target="_blank">
+            <div class="link-icon">🛍️</div>
+            <div class="link-info">
+              <div class="link-title">TikTok Seller Center</div>
+              <div class="link-desc">马来西亚卖家后台</div>
+            </div>
+            <div class="link-arrow">↗</div>
+          </a>
+
+          <a class="link-card" href="https://ads.tiktok.com/" target="_blank">
+            <div class="link-icon">📣</div>
+            <div class="link-info">
+              <div class="link-title">TikTok Ads Manager</div>
+              <div class="link-desc">广告投放管理</div>
+            </div>
+            <div class="link-arrow">↗</div>
+          </a>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 6: Form -->
   <div id="tab-form" class="tab-content">
     <div class="card">
       <div class="card-header orange" id="form-title">新增产品</div>
